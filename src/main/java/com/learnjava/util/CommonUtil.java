@@ -27,6 +27,18 @@ public class CommonUtil {
         stopWatch.start();
     }
 
+    public static void stopTimer() {
+        stopWatch.stop();
+    }
+
+    public static void getTimeTimer() {
+        log("Total Time Taken : " +stopWatch.getTime());
+    }
+
+    public static void resetTimer() {
+        stopWatch.reset();
+    }
+
     public static void timeTaken(){
         stopWatch.stop();
         log("Total Time Taken : " +stopWatch.getTime());
