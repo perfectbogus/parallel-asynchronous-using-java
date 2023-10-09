@@ -12,10 +12,12 @@ import com.learnjava.domain.checkout.Cart;
 import com.learnjava.domain.checkout.CartItem;
 import com.learnjava.domain.checkout.CheckoutResponse;
 import com.learnjava.domain.checkout.CheckoutStatus;
-import com.learnjava.util.CommonUtil;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.learnjava.util.LoggerUtil.log;
+import static java.util.stream.Collectors.summingDouble;
 
 public class CheckoutService {
 
@@ -25,19 +27,32 @@ public class CheckoutService {
     this.priceValidatorService = priceValidatorService;
   }
   public CheckoutResponse checkout(Cart cart) {
-    CommonUtil.startTimer();
+
     List<CartItem> priceValidationList = cart.getCartItemList().parallelStream().map(cartItem -> {
       boolean isPriceInvalid = priceValidatorService.isCartItemInvalid(cartItem);
       cartItem.setExpired(isPriceInvalid);
       return cartItem;
     }).filter(CartItem::isExpired).collect(Collectors.toList());
-    CommonUtil.stopTimer();
-    CommonUtil.getTimeTimer();
-    CommonUtil.resetTimer();
+
     if (priceValidationList.size() > 0) {
       return new CheckoutResponse(CheckoutStatus.FAILURE, priceValidationList);
     }
 
-    return new CheckoutResponse(CheckoutStatus.SUCCESS);
+    double finalPrice = calculateFinalPrice(cart);
+    log("Final Price:" + finalPrice);
+    return new CheckoutResponse(CheckoutStatus.SUCCESS, finalPrice);
   }
+
+  private double calculateFinalPrice(Cart cart) {
+    return cart.getCartItemList().parallelStream()
+        .map(cartItem -> cartItem.getQuantity() * cartItem.getRate())
+        .mapToDouble(Double::doubleValue).sum();
+  }
+
+  private double calculateFinalPriceReduced(Cart cart) {
+    return cart.getCartItemList().parallelStream()
+        .map(cartItem -> cartItem.getQuantity() * cartItem.getRate())
+        .reduce(0.0, (x, y) -> x+y);
+  }
+
 }

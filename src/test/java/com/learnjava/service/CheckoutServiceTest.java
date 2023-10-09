@@ -12,6 +12,20 @@ class CheckoutServiceTest {
 
   PriceValidatorService priceValidatorService = new PriceValidatorService();
   CheckoutService checkoutService = new CheckoutService(priceValidatorService);
+
+
+  @Test
+  void testSum() {
+    //given
+    Cart cart = DataSet.createCart(6);
+
+    //when
+    CheckoutResponse checkout = checkoutService.checkout(cart);
+
+    //then
+    assertEquals(CheckoutStatus.SUCCESS, checkout.getCheckoutStatus());
+    assertTrue(checkout.getFinalRate() > 0);
+  }
   @Test
   void checkout() {
     //given
